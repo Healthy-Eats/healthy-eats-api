@@ -1,0 +1,47 @@
+Body Parameter Register :
+
+{
+  "name": "robby123",
+  "email": "robby@gmail.com",
+  "pass": "123"
+}
+
+Body Parameter Login (ada token) :
+
+{
+  "email": "robby@gmail.com",
+  "pass": "123"
+}
+
+Body Parameter updateUser :
+
+{
+  "name": "robby",
+  "age": "21",
+  "gender": "MALE",
+  "height": 170,
+  "weight": 57
+}
+
+Body Parameter createPlan (set auth token "Authorization : Bearer <token>") :
+
+{
+  "name": "deficit calorie",
+  "goal": "decrease body weight",
+  "activity": "Active",
+  "calories_target": 1500
+}
+
+Body Parameter updatePlan (set auth token dan plan_id di request url) :
+
+{
+  "name": "bulking",
+  "goal": "increase body weight",
+  "activity": "Active",
+  "calories_target": 3500,
+  "calories_consume": 10
+}
+
+Body Parameter deletePlan :
+
+Tidak ada. Langsung saja set di request URL.
