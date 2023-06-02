@@ -1,4 +1,16 @@
-const { createUser, loginUser, updateUser, createPlan, updatePlan, deletePlan, classifyingImage, addConsumedCalorie, readUser, readPlan, getHistory } = require('./handler');
+const { 
+    createUser, 
+    loginUser, 
+    updateUser, 
+    createPlan, 
+    updatePlan, 
+    deletePlan, 
+    classifyingImage, 
+    addConsumedCalorie, 
+    readUser, 
+    readPlan, 
+    getHistory 
+} = require('./handler');
 
 const routes = [
     {
