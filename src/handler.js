@@ -391,7 +391,7 @@ const getHistory = async (request, h) => {
 
     try {
 
-        const query = 'SELECT table_object.object_id AS id, table_object.image_url AS imageUrl, table_food.food_name as foodName, table_food.food_calories as foodCal FROM table_object INNER JOIN table_food ON table_object.food_id=table_food.food_id WHERE table_object.user_id = ?';
+        const query = 'SELECT table_object.object_id AS id, table_object.image_url AS imageUrl, table_food.food_name AS foodName, table_food.food_calories AS foodCal FROM table_object INNER JOIN table_food ON table_object.food_id=table_food.food_id WHERE table_object.user_id = ?';
 
         const listObj = await new Promise((resolve, reject) => {
             connection.query(query, [userId], (err, rows, field) => {
