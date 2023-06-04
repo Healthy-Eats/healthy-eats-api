@@ -4,13 +4,14 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const FormData = require('form-data');
+require('dotenv').config()
 
 const connection = mysql.createConnection({
     
-    host: '34.101.128.76',
-    user: 'root',
-    database: 'db-healthy-eats',
-    password: 'eatshealthy'
+    host: process.env.DB_HOST, //'34.101.128.76',
+    user: process.env.DB_USER, //'root',
+    database: process.env.DB_NAME, //'db-healthy-eats',
+    password: process.env.DB_PASS //'eatshealthy'
 
 });
 
