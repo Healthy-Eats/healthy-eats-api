@@ -17,26 +17,43 @@ const connection = mysql.createConnection({
 
 const createUser = async (request, h) => {
     try {
-        const {
-            name,
-            email,
-            pass
-        } = request.payload;
-    
+        const { name, email, pass } = request.payload;
+
         if (!email || !pass) {
             const response = h.response({
                 status: 'fail',
                 message: 'Please fill email and password',
                 data: email,
-              });
-              response.code(400);
-              return response;
+            });
+            response.code(400);
+            return response;
         }
-    
+
+        // cek email di db
+        const checkEmailQuery = 'SELECT * FROM table_user WHERE user_email = ?';
+        const existingUser = await new Promise((resolve, reject) => {
+            connection.query(checkEmailQuery, [email], (err, rows, field) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows[0]);
+                }
+            });
+        });
+
+        if (existingUser) {
+            const response = h.response({
+                status: 'fail',
+                message: 'Email already exists',
+            });
+            response.code(400);
+            return response;
+        }
+
         const hashedPass = await bcrypt.hash(pass, 10);
-    
-        const query = "INSERT INTO table_user(user_name, user_email, user_pass) VALUES(?, ?, ?)";
-    
+
+        const query = 'INSERT INTO table_user(user_name, user_email, user_pass) VALUES(?, ?, ?)';
+
         await new Promise((resolve, reject) => {
             connection.query(query, [name, email, hashedPass], (err, rows, field) => {
                 if (err) {
@@ -46,7 +63,7 @@ const createUser = async (request, h) => {
                 }
             });
         });
-    
+
         const response = h.response({
             status: 'success',
             message: 'User created successfully',
@@ -55,13 +72,13 @@ const createUser = async (request, h) => {
         return response;
     } catch (err) {
         const response = h.response({
-          status: 'fail',
-          message: err.message,
+            status: 'fail',
+            message: err.message,
         });
         response.code(500);
         return response;
     }
-}
+};
 
 const loginUser = async (request, h) => {
     const { email, pass } = request.payload;
