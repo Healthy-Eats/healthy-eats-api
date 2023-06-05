@@ -40,7 +40,11 @@ const routes = [
     },
     {
         method: 'POST',
+<<<<<<< HEAD
         path: '/readPlan',
+=======
+        path: '/{plan_id}',
+>>>>>>> 127f5fa3f38658f8444198fe4a24a532818eb6d6
         handler: readPlan,
     },
     {
