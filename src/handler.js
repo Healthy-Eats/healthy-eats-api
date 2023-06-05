@@ -25,10 +25,30 @@ const createUser = async (request, h) => {
             const response = h.response({
                 status: 'fail',
                 message: 'Please fill email and password',
-                data: email,
               });
               response.code(400);
               return response;
+        }
+
+        // cek email di db
+        const checkEmailQuery = 'SELECT * FROM table_user WHERE user_email = ?';
+        const existingUser = await new Promise((resolve, reject) => {
+            connection.query(checkEmailQuery, [email], (err, rows, field) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows[0]);
+                }
+            });
+        });
+
+        if (existingUser) {
+            const response = h.response({
+                status: 'fail',
+                message: 'Email already exists',
+            });
+            response.code(400);
+            return response;
         }
     
         const hashedPass = await bcrypt.hash(pass, 10);
@@ -220,6 +240,27 @@ const createPlan = async (request, h) => {
         const token = request.headers.authorization.replace('Bearer ', '');
         const decodedToken = jwt.verify(token, 'secret_key');
         const userId = decodedToken.userId;
+
+        // cek plan di db
+        const checkPlanQuery = 'SELECT * FROM table_plan WHERE user_id = ?';
+        const existingPlan = await new Promise((resolve, reject) => {
+            connection.query(checkPlanQuery, [userId], (err, rows, field) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows[0]);
+                }
+            });
+        });
+
+        if (existingPlan) {
+            const response = h.response({
+                status: 'fail',
+                message: 'Plan already exists',
+            });
+            response.code(400);
+            return response;
+        }
 
         const query = 'INSERT INTO table_plan (user_id, plan_name, plan_goal, plan_activity, calories_target) VALUES (?, ?, ?, ?, ?)';
 

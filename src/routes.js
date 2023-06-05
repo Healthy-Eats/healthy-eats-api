@@ -40,7 +40,7 @@ const routes = [
     },
     {
         method: 'POST',
-        path: '/{plan_id}',
+        path: '/readPlan',
         handler: readPlan,
     },
     {
