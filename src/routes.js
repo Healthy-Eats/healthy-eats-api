@@ -9,7 +9,8 @@ const {
     addConsumedCalorie, 
     readUser, 
     readPlan, 
-    getHistory 
+    getHistory, 
+    deleteUser
 } = require('./handler');
 
 const routes = [
@@ -32,6 +33,11 @@ const routes = [
         method: 'PUT',
         path: '/updateUser',
         handler: updateUser
+    },
+    {
+        method: 'DELETE',
+        path: '/deleteUser',
+        handler: deleteUser
     },
     {
         method: 'POST',

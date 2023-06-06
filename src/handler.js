@@ -111,17 +111,13 @@ const loginUser = async (request, h) => {
         if (!isPassValid){
             const response = h.response({
                 status: 'fail',
-                message: 'Account invalid!',
+                message: 'Account invalid',
             });
             response.code(400);
             return response;
         }
         
         const token = jwt.sign({ userId : user.user_id }, 'secret_key');
-        
-        // check & extract userid
-        // const decodedToken = jwt.verify(token, 'secret_key');
-        // const userId = decodedToken.userId;
     
         const response = h.response({
             status: 'success',
@@ -141,12 +137,23 @@ const loginUser = async (request, h) => {
 }
 
 const readUser = async (request, h) => {
-
-    const token = request.headers.authorization.replace('Bearer ', '');
-    const decodedToken = jwt.verify(token, 'secret_key');
-    const userId = decodedToken.userId;
-
     try {
+        const token = request.headers.authorization.replace('Bearer ', '');
+        let decodedToken;
+
+        try{
+            decodedToken = jwt.verify(token, 'secret_key');
+        } catch (err) {
+            const response = h.response({
+                status: 'missed',
+                message: 'User is not authorized!',
+            });
+            response.code(401);
+            return response;
+        }
+
+        const userId = decodedToken.userId;
+
         const query = 'SELECT * FROM table_user WHERE user_id = ?';
         
         const user = await new Promise((resolve, reject) => {
@@ -168,10 +175,12 @@ const readUser = async (request, h) => {
             return response;
         }
 
+        const { user_pass, ...userData } = user;
+
         const response = h.response({
             status: 'success',
             message: 'read successful',
-            data: user
+            data: userData,
         });
         response.code(200);
         return response;
@@ -195,7 +204,19 @@ const updateUser = async (request, h) => {
     } = request.payload;
 
     const token = request.headers.authorization.replace('Bearer ', '');
-    const decodedToken = jwt.verify(token, 'secret_key');
+    let decodedToken;
+
+    try{
+        decodedToken = jwt.verify(token, 'secret_key');
+    } catch (err) {
+        const response = h.response({
+            status: 'missed',
+            message: 'User is not authorized!',
+        });
+        response.code(401);
+        return response;
+    }
+
     const userId = decodedToken.userId;
 
     try {
@@ -228,6 +249,73 @@ const updateUser = async (request, h) => {
     }
 }
 
+const deleteUser = async (request, h) => {
+    try {
+        const token = request.headers.authorization.replace('Bearer ', '');
+        let decodedToken;
+
+        try{
+            decodedToken = jwt.verify(token, 'secret_key');
+        } catch (err) {
+            const response = h.response({
+                status: 'missed',
+                message: 'User is not authorized!',
+            });
+            response.code(401);
+            return response;
+        }
+
+        const userId = decodedToken.userId;
+
+        const query = 'DELETE FROM table_user WHERE user_id = ?';
+        
+        await new Promise((resolve, reject) => {
+            connection.query(query, [userId], (err, rows, field) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+
+        const deleteCheck = 'SELECT user_id FROM table_user WHERE user_id = ?';
+
+        const user = await new Promise((resolve, reject) => {
+            connection.query(query, [userId], (err, rows, field) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows[0]);
+                }
+            });
+        });
+
+        if (!user) {
+            const response = h.response({
+                status: 'success',
+                message: 'delete successful',
+            });
+            response.code(200);
+            return response;
+        } else {
+            const response = h.response({
+                status: 'fail',
+                message: 'User is not found or unauthorized!',
+            });
+            response.code(401);
+            return response;
+        }
+    } catch (err) {
+        const response = h.response({
+            status: 'fail',
+            message: err.message,
+        });
+        response.code(500);
+        return response;
+    }
+}
+
 const createPlan = async (request, h) => {
     try {
         const {
@@ -238,7 +326,19 @@ const createPlan = async (request, h) => {
         } = request.payload;
 
         const token = request.headers.authorization.replace('Bearer ', '');
-        const decodedToken = jwt.verify(token, 'secret_key');
+        let decodedToken;
+
+        try{
+            decodedToken = jwt.verify(token, 'secret_key');
+        } catch (err) {
+            const response = h.response({
+                status: 'missed',
+                message: 'User is not authorized!',
+            });
+            response.code(401);
+            return response;
+        }
+
         const userId = decodedToken.userId;
 
         // cek plan di db
@@ -293,7 +393,19 @@ const createPlan = async (request, h) => {
 const readPlan = async (request, h) => {
 
     const token = request.headers.authorization.replace('Bearer ', '');
-    const decodedToken = jwt.verify(token, 'secret_key');
+    let decodedToken;
+
+    try{
+        decodedToken = jwt.verify(token, 'secret_key');
+    } catch (err) {
+        const response = h.response({
+            status: 'missed',
+            message: 'User is not authorized!',
+        });
+        response.code(401);
+        return response;
+    }
+
     const userId = decodedToken.userId;
 
     try {
@@ -347,7 +459,19 @@ const updatePlan = async (request, h) => {
         } = request.payload;
 
         const token = request.headers.authorization.replace('Bearer ', '');
-        const decodedToken = jwt.verify(token, 'secret_key');
+        let decodedToken;
+
+        try{
+            decodedToken = jwt.verify(token, 'secret_key');
+        } catch (err) {
+            const response = h.response({
+                status: 'missed',
+                message: 'User is not authorized!',
+            });
+            response.code(401);
+            return response;
+        }
+
         const userId = decodedToken.userId;
 
         const query = 'UPDATE table_plan SET plan_name = ?, plan_goal = ?, plan_activity = ?, calories_target = ?, calories_consume = ? WHERE plan_id = ?';
@@ -387,7 +511,19 @@ const deletePlan = async (request, h) => {
         const { plan_id } = request.params;
 
         const token = request.headers.authorization.replace('Bearer ', '');
-        const decodedToken = jwt.verify(token, 'secret_key');
+        let decodedToken;
+
+        try{
+            decodedToken = jwt.verify(token, 'secret_key');
+        } catch (err) {
+            const response = h.response({
+                status: 'missed',
+                message: 'User is not authorized!',
+            });
+            response.code(401);
+            return response;
+        }
+
         const userId = decodedToken.userId;
 
         const query = 'DELETE FROM table_plan WHERE plan_id = ? AND user_id = ?';
@@ -426,13 +562,25 @@ const deletePlan = async (request, h) => {
 // not tested yet
 const getHistory = async (request, h) => {
 
-    const token = request.headers.authorization.replace('Bearer ', '');
-    const decodedToken = jwt.verify(token, 'secret_key');
-    const userId = decodedToken.userId;
-
     try {
 
-        const query = 'SELECT table_object.object_id AS id, table_object.image_url AS imageUrl, table_food.food_name AS foodName, table_food.food_calories AS foodCal FROM table_object INNER JOIN table_food ON table_object.food_id=table_food.food_id WHERE table_object.user_id = ?';
+        const token = request.headers.authorization.replace('Bearer ', '');
+        let decodedToken;
+
+        try{
+            decodedToken = jwt.verify(token, 'secret_key');
+        } catch (err) {
+            const response = h.response({
+                status: 'missed',
+                message: 'User is not authorized!',
+            });
+            response.code(401);
+            return response;
+        }
+
+        const userId = decodedToken.userId;
+
+        const query = 'SELECT table_object.object_id AS id, table_food.image_url AS imageUrl, table_food.food_name AS foodName, table_food.food_calories AS foodCal FROM table_object INNER JOIN table_food ON table_object.food_id=table_food.food_id WHERE table_object.user_id = ?';
 
         const listObj = await new Promise((resolve, reject) => {
             connection.query(query, [userId], (err, rows, field) => {
@@ -464,12 +612,23 @@ const getHistory = async (request, h) => {
 // for ML endpoints (also could be used to update the calories (unsure))
 // not finished yet
 const classifyingImage = async (request, h) => {
-    
-    const token = request.headers.authorization.replace('Bearer ', '');
-    const decodedToken = jwt.verify(token, 'secret_key');
-    const userId = decodedToken.userId;
-    
     try {
+
+        const token = request.headers.authorization.replace('Bearer ', '');
+        let decodedToken;
+
+        try{
+            decodedToken = jwt.verify(token, 'secret_key');
+        } catch (err) {
+            const response = h.response({
+                status: 'missed',
+                message: 'User is not authorized!',
+            });
+            response.code(401);
+            return response;
+        }
+
+        const userId = decodedToken.userId;
 
         const { file } = request.payload;
 
@@ -519,8 +678,18 @@ const addConsumedCalorie = async (request, h) => {
             calories_consume
         } = request.payload;
 
-        const token = request.headers.authorization.replace('Bearer ', '');
-        const decodedToken = jwt.verify(token, 'secret_key');
+        try{
+            const token = request.headers.authorization.replace('Bearer ', '');
+            const decodedToken = jwt.verify(token, 'secret_key');
+        } catch (err) {
+            const response = h.response({
+                status: 'missed',
+                message: 'User is not authorized!',
+            });
+            response.code(401);
+            return response;
+        }
+
         const userId = decodedToken.userId;
 
         const query = 'UPDATE table_plan SET calories_consume = calories_consume + ? WHERE plan_id = ?';
@@ -563,6 +732,7 @@ module.exports = {
     createPlan,
     readPlan,
     updatePlan,
+    deleteUser,
     deletePlan,
     getHistory,
     classifyingImage,
