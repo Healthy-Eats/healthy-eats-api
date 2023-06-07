@@ -644,7 +644,6 @@ const classifyingImage = async (request, h) => {
             writableStream.on('error', reject);
         });
         
-        const mlEndpoint = 'https://healthy-eats-model-p3iarqd74q-uc.a.run.app/predict';
         const formData = new FormData();
         formData.append('file', fs.createReadStream(filePath));
         
