@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const FormData = require('form-data');
+const Path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const connection = mysql.createConnection({
@@ -629,36 +631,33 @@ const classifyingImage = async (request, h) => {
         }
 
         const userId = decodedToken.userId;
-
-        const { file } = request.payload;
-
-        const fd = new FormData();
-
-        fd.append('file', file._data);
-
-        const headers = fd.getHeaders();
-
-        const mlResult = await axios.post('http://', fd, { // ML endpoint
-            headers,
-        });
-
-        const result = mlResult.data;
-
-        /* insert the process code here
-
-        const currentDate = new Date().toISOString();
-
-        const query = 'INSERT INTO table_object(user_id, plan_id, food_id, date_captured, imageUrl) VALUES(?, ?, ?, ?, ?)'
-
-        end here */ 
+        const file = request.payload.file;
         
-        const response = h.response({
-            status: 'success',
-            message: 'Uploaded and processed successfully',
-            data: result,
+        // Save the file to a temp location
+        const filePath = Path.join(__dirname, 'uploadTemp', file.hapi.filename);
+        const writableStream = fs.createWriteStream(filePath);
+        file.pipe(writableStream);
+
+        // Wait to be saved
+        await new Promise((resolve, reject) => {
+            writableStream.on('finish', resolve);
+            writableStream.on('error', reject);
         });
-        response.code(200);
-        return response;
+        
+        const mlEndpoint = 'https://healthy-eats-model-p3iarqd74q-uc.a.run.app/predict';
+        const formData = new FormData();
+        formData.append('file', fs.createReadStream(filePath));
+        
+        const response = await axios.post('https://healthy-eats-model-p3iarqd74q-uc.a.run.app/predict', formData, {
+            headers: formData.getHeaders,
+            responseType: 'arraybuffer'  
+        });
+          
+        const imageData = Buffer.from(response.data, 'binary');  // Convert the binary response data to a Buffer
+
+        fs.unlinkSync(filePath);
+          
+        return h.response(imageData).type('image/jpeg');
     } catch (err) {
         const response = h.response({
             status: 'fail',
@@ -738,3 +737,4 @@ module.exports = {
     classifyingImage,
     addConsumedCalorie,
 };
+
