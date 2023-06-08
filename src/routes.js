@@ -6,7 +6,7 @@ const {
     updatePlan, 
     deletePlan, 
     classifyingImage, 
-    addConsumedCalorie, 
+    //addConsumedCalorie, 
     readUser, 
     readPlan, 
     getHistory, 
@@ -25,7 +25,7 @@ const routes = [
         handler: loginUser,
     },
     {
-        method: 'POST',
+        method: 'GET',
         path: '/readUser',
         handler: readUser,
     },
@@ -45,7 +45,7 @@ const routes = [
         handler: createPlan,
     },
     {
-        method: 'POST',
+        method: 'GET',
         path: '/readPlan',
         handler: readPlan,
     },
@@ -79,12 +79,13 @@ const routes = [
         },
     },
 
-    // plan c route
+    /* plan c route
     {
         method: 'PUT',
         path: '/updatePlan/{plan_id}/calorie',
         handler: addConsumedCalorie,
     },
+    */
 ];
 
 module.exports = routes;

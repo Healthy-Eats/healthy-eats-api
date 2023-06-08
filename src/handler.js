@@ -647,16 +647,91 @@ const classifyingImage = async (request, h) => {
         const formData = new FormData();
         formData.append('file', fs.createReadStream(filePath));
         
-        const response = await axios.post('https://healthy-eats-model-p3iarqd74q-uc.a.run.app/predict', formData, {
+        const mlResponse = await axios.post('https://healthy-eats-model-p3iarqd74q-uc.a.run.app/predict', formData, {
             headers: formData.getHeaders,
-            responseType: 'arraybuffer'  
+            //responseType: 'arraybuffer',
+            responseType: 'json',  
         });
-          
-        const imageData = Buffer.from(response.data, 'binary');  // Convert the binary response data to a Buffer
 
         fs.unlinkSync(filePath);
-          
-        return h.response(imageData).type('image/jpeg');
+        
+        const predictedClass = mlResponse.data.predicted_class;
+        const predictedProb = mlResponse.data.prediction_prob;
+        
+        let foodName;
+
+        if (predictedClass.includes("_")) {
+            foodName = predictedClass.replace(/_/g, " "); 
+        } else {
+            foodName = predictedClass;
+        }
+
+        const getFoodQuery = 'SELECT food_id, food_name, food_calories, image_url FROM table_food WHERE food_name = ?';
+
+        const food = await new Promise((resolve, reject) => {
+            connection.query(getFoodQuery, [foodName], (err, rows, field) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows[0]);
+                }
+            });
+        });
+
+        const getPlanIdQuery = 'SELECT plan_id FROM table_plan WHERE user_id = ?'
+
+        const planId = await new Promise((resolve, reject) => {
+            connection.query(getPlanIdQuery, [userId], (err, rows, field) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows[0].plan_id);
+                }
+            });
+        });
+
+        const updateConsumeCalQuery = 'UPDATE table_plan SET calories_consume = calories_consume + ? WHERE plan_id = ?';
+
+        await new Promise((resolve, reject) => {
+            connection.query(updateConsumeCalQuery, [food.food_calories, planId], (err, rows, field) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+        const day = String(currentDate.getDate()).padStart(2, "0");
+        const formattedDate = `${year}-${month}-${day}`;
+
+        console.log(formattedDate);
+        
+        const insertObjQuery = 'INSERT INTO table_object (date_captured, user_id, food_id, plan_id) VALUES(?, ?, ?, ?)';
+
+        await new Promise((resolve, reject) => {
+            connection.query(insertObjQuery, [formattedDate, userId, food.food_id, planId], (err, rows, field) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+
+        const response = h.response({
+            status: 'success',
+            message: 'image predicted',
+            foodName: food.food_name,
+            foodCal: food.food_calories,
+            foodImg: food.image_url,
+            predictedProb: predictedProb,
+        });
+        response.code(200);
+        return response;
     } catch (err) {
         const response = h.response({
             status: 'fail',
@@ -668,7 +743,7 @@ const classifyingImage = async (request, h) => {
 };
 
 // plan c handler
-
+/*
 const addConsumedCalorie = async (request, h) => {
     try {
         const { plan_id } = request.params;
@@ -721,6 +796,7 @@ const addConsumedCalorie = async (request, h) => {
         return response;
     }
 };
+*/
 
 module.exports = {
     createUser,
@@ -734,6 +810,6 @@ module.exports = {
     deletePlan,
     getHistory,
     classifyingImage,
-    addConsumedCalorie,
+    //addConsumedCalorie,
 };
 
