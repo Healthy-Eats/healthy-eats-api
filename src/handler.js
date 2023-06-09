@@ -632,7 +632,7 @@ const classifyingImage = async (request, h) => {
 
         const userId = decodedToken.userId;
         const file = request.payload.file;
-       
+        
         const getPlanIdQuery = 'SELECT plan_id FROM table_plan WHERE user_id = ?'
 
         const planId = await new Promise((resolve, reject) => {
@@ -640,19 +640,21 @@ const classifyingImage = async (request, h) => {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(rows);
+                    resolve(rows[0]);
                 }
             });
         });
         
-        if (planId.length === 0) {
-            const response = h.response ({
+        if (!planId) {
+            const response = h.response({
                 status: 'fail',
-                message: 'Plan doesn\'t exist. Please create a plan.',
+                message: 'Plan id not found',
             });
-            response.code(400);
+            response.code(404);
             return response;
         }
+
+        const planIdResult = planId.plan_id;
         
         // Save the file to a temp location
         const filePath = Path.join(__dirname, 'uploadTemp', file.hapi.filename);
@@ -698,6 +700,8 @@ const classifyingImage = async (request, h) => {
                 }
             });
         });
+
+        
 
         const updateConsumeCalQuery = 'UPDATE table_plan SET calories_consume = calories_consume + ? WHERE plan_id = ?';
 
@@ -821,4 +825,3 @@ module.exports = {
     classifyingImage,
     //addConsumedCalorie,
 };
-
