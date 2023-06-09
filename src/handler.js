@@ -613,6 +613,7 @@ const getHistory = async (request, h) => {
 
 // for ML endpoints (also could be used to update the calories (unsure))
 // not finished yet
+// worked
 const classifyingImage = async (request, h) => {
     try {
 
@@ -633,10 +634,11 @@ const classifyingImage = async (request, h) => {
         const userId = decodedToken.userId;
         const file = request.payload.file;
         
-        const checkPlanIdQuery = 'SELECT plan_id FROM table_plan WHERE user_id = ?';
-
+        const getPlanIdQuery = 'SELECT plan_id FROM table_plan WHERE user_id = ?';
+        
+        //check plan
         const planIdResult = await new Promise((resolve, reject) => {
-            connection.query(checkPlanIdQuery, [userId], (err, rows, field) => {
+            connection.query(getPlanIdQuery, [userId], (err, rows, field) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -648,7 +650,7 @@ const classifyingImage = async (request, h) => {
         if (!planIdResult || !planIdResult.plan_id) {
             const response = h.response({
                 status: 'fail',
-                message: 'Plan not found',
+                message: 'Plan not found. Please create a plan.',
             });
             response.code(404);
             return response;
@@ -700,8 +702,6 @@ const classifyingImage = async (request, h) => {
                 }
             });
         });
-
-        
 
         const updateConsumeCalQuery = 'UPDATE table_plan SET calories_consume = calories_consume + ? WHERE plan_id = ?';
 
