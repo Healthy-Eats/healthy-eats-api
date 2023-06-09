@@ -685,6 +685,14 @@ const classifyingImage = async (request, h) => {
                 if (err) {
                     reject(err);
                 } else {
+                    if (rows.length === 0) {
+                        const response = h.response({
+                            status: 'fail',
+                            message: 'Plan doesn\'t exist. Please create a plan.',
+                        });
+                        response.code(400);
+                        throw response;
+                    }
                     resolve(rows[0].plan_id);
                 }
             });
