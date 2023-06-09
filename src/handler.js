@@ -268,11 +268,23 @@ const deleteUser = async (request, h) => {
         }
 
         const userId = decodedToken.userId;
-
-        const query = 'DELETE FROM table_user WHERE user_id = ?';
         
+         // Delete objects
+        const deleteObjects = 'DELETE FROM table_object WHERE object_id IN (SELECT object_id FROM table_object WHERE user_id = ?)';
         await new Promise((resolve, reject) => {
-            connection.query(query, [userId], (err, rows, field) => {
+            connection.query(deleteObjects, [userId], (err, rows, field) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+        
+        // Delete plan
+        const deletePlan = 'DELETE FROM table_plan WHERE plan_id IN (SELECT plan_id FROM table_plan WHERE user_id = ?)';
+        await new Promise((resolve, reject) => {
+            connection.query(deletePlansQuery, [userId], (err, rows, field) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -281,33 +293,23 @@ const deleteUser = async (request, h) => {
             });
         });
 
-        const deleteCheck = 'SELECT user_id FROM table_user WHERE user_id = ?';
-
-        const user = await new Promise((resolve, reject) => {
-            connection.query(query, [userId], (err, rows, field) => {
+        // Delete user
+        const deleteUserQuery = 'DELETE FROM table_user WHERE user_id = ?';
+        await new Promise((resolve, reject) => {
+            connection.query(deleteUserQuery, [userId], (err, rows, field) => {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(rows[0]);
+                    resolve();
                 }
             });
         });
-
-        if (!user) {
-            const response = h.response({
-                status: 'success',
-                message: 'delete successful',
-            });
-            response.code(200);
-            return response;
-        } else {
-            const response = h.response({
-                status: 'fail',
-                message: 'User is not found or unauthorized!',
-            });
-            response.code(401);
-            return response;
-        }
+        const response = h.response({
+            status: 'success',
+            message: 'Delete successful',
+        });
+        response.code(200);
+        return response;
     } catch (err) {
         const response = h.response({
             status: 'fail',
@@ -316,7 +318,7 @@ const deleteUser = async (request, h) => {
         response.code(500);
         return response;
     }
-}
+};
 
 const createPlan = async (request, h) => {
     try {
