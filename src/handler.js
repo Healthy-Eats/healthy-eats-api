@@ -632,6 +632,27 @@ const classifyingImage = async (request, h) => {
 
         const userId = decodedToken.userId;
         const file = request.payload.file;
+       
+        const getPlanIdQuery = 'SELECT plan_id FROM table_plan WHERE user_id = ?'
+
+        const planId = await new Promise((resolve, reject) => {
+            connection.query(getPlanIdQuery, [userId], (err, rows, field) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows);
+                }
+            });
+        });
+        
+        if (planId.length === 0) {
+            const response = h.response ({
+                status: 'fail',
+                message: 'Plan doesn\'t exist. Please create a plan.',
+            });
+            response.code(400);
+            return response;
+        }
         
         // Save the file to a temp location
         const filePath = Path.join(__dirname, 'uploadTemp', file.hapi.filename);
@@ -674,26 +695,6 @@ const classifyingImage = async (request, h) => {
                     reject(err);
                 } else {
                     resolve(rows[0]);
-                }
-            });
-        });
-
-        const getPlanIdQuery = 'SELECT plan_id FROM table_plan WHERE user_id = ?'
-
-        const planId = await new Promise((resolve, reject) => {
-            connection.query(getPlanIdQuery, [userId], (err, rows, field) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    if (rows.length === 0) {
-                        const response = h.response({
-                            status: 'fail',
-                            message: 'Plan doesn\'t exist. Please create a plan.',
-                        });
-                        response.code(400);
-                        throw response;
-                    }
-                    resolve(rows[0].plan_id);
                 }
             });
         });
