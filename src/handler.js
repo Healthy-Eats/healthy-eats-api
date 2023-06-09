@@ -270,7 +270,7 @@ const deleteUser = async (request, h) => {
         const userId = decodedToken.userId;
         
          // Delete objects
-        const deleteObjects = 'DELETE FROM table_object WHERE object_id IN (SELECT object_id FROM table_object WHERE user_id = ?)';
+        const deleteObjects = 'DELETE FROM table_object WHERE user_id = ?';
         await new Promise((resolve, reject) => {
             connection.query(deleteObjects, [userId], (err, rows, field) => {
                 if (err) {
@@ -282,9 +282,9 @@ const deleteUser = async (request, h) => {
         });
         
         // Delete plan
-        const deletePlan = 'DELETE FROM table_plan WHERE plan_id IN (SELECT plan_id FROM table_plan WHERE user_id = ?)';
+        const deletePlan = 'DELETE FROM table_plan WHERE user_id = ?';
         await new Promise((resolve, reject) => {
-            connection.query(deletePlansQuery, [userId], (err, rows, field) => {
+            connection.query(deletePlan, [userId], (err, rows, field) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -294,9 +294,9 @@ const deleteUser = async (request, h) => {
         });
 
         // Delete user
-        const deleteUserQuery = 'DELETE FROM table_user WHERE user_id = ?';
+        const query = 'DELETE FROM table_user WHERE user_id = ?';
         await new Promise((resolve, reject) => {
-            connection.query(deleteUserQuery, [userId], (err, rows, field) => {
+            connection.query(query, [userId], (err, rows, field) => {
                 if (err) {
                     reject(err);
                 } else {
