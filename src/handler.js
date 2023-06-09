@@ -674,7 +674,6 @@ const classifyingImage = async (request, h) => {
         
         const mlResponse = await axios.post('https://healthy-eats-model-p3iarqd74q-uc.a.run.app/predict', formData, {
             headers: formData.getHeaders,
-            //responseType: 'arraybuffer',
             responseType: 'json',  
         });
 
@@ -755,61 +754,10 @@ const classifyingImage = async (request, h) => {
     }
 };
 
-// plan c handler
-/*
-const addConsumedCalorie = async (request, h) => {
-    try {
-        const { plan_id } = request.params;
-        const {
-            calories_consume
-        } = request.payload;
+const getDataDashboard = (request, h) => {
 
-        try{
-            const token = request.headers.authorization.replace('Bearer ', '');
-            const decodedToken = jwt.verify(token, 'secret_key');
-        } catch (err) {
-            const response = h.response({
-                status: 'missed',
-                message: 'User is not authorized!',
-            });
-            response.code(401);
-            return response;
-        }
-
-        const userId = decodedToken.userId;
-
-        const query = 'UPDATE table_plan SET calories_consume = calories_consume + ? WHERE plan_id = ?';
-
-        await new Promise((resolve, reject) => {
-            connection.query(query, [calories_consume, plan_id], (err, rows, field) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    if (rows.affectedRows === 0) {
-                        reject(new Error('Plan not found or unauthorized'));
-                    } else {
-                        resolve();
-                    }
-                }
-            });
-        });
-
-        const response = h.response({
-            status: 'success',
-            message: 'Calories updated successfully',
-        });
-        response.code(200);
-        return response;
-    } catch (err) {
-        const response = h.response({
-            status: 'fail',
-            message: err.message,
-        });
-        response.code(500);
-        return response;
-    }
-};
-*/
+    
+}
 
 module.exports = {
     createUser,
@@ -823,5 +771,4 @@ module.exports = {
     deletePlan,
     getHistory,
     classifyingImage,
-    //addConsumedCalorie,
 };

@@ -6,7 +6,6 @@ const {
     updatePlan, 
     deletePlan, 
     classifyingImage, 
-    //addConsumedCalorie, 
     readUser, 
     readPlan, 
     getHistory, 
@@ -78,14 +77,6 @@ const routes = [
             },
         },
     },
-
-    /* plan c route
-    {
-        method: 'PUT',
-        path: '/updatePlan/{plan_id}/calorie',
-        handler: addConsumedCalorie,
-    },
-    */
 ];
 
 module.exports = routes;
