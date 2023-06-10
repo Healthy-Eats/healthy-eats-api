@@ -756,11 +756,6 @@ const classifyingImage = async (request, h) => {
     }
 };
 
-const getDataDashboard = (request, h) => {
-
-    
-}
-
 module.exports = {
     createUser,
     loginUser,
