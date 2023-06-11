@@ -50,12 +50,12 @@ const routes = [
     },
     {
         method: 'PUT',
-        path: '/{plan_id}/updatePlan',
+        path: '/updatePlan',
         handler: updatePlan,
     },
     {
         method: 'DELETE',
-        path: '/{plan_id}/deletePlan',
+        path: '/deletePlan',
         handler: deletePlan,
     },
     {

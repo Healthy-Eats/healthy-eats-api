@@ -453,13 +453,12 @@ const readPlan = async (request, h) => {
 
 const updatePlan = async (request, h) => {
     try {
-        const { plan_id } = request.params;
+ 
         const {
             name,
             goal,
             activity,
             calories_target,
-            calories_consume
         } = request.payload;
 
         const token = request.headers.authorization.replace('Bearer ', '');
@@ -478,10 +477,10 @@ const updatePlan = async (request, h) => {
 
         const userId = decodedToken.userId;
 
-        const query = 'UPDATE table_plan SET plan_name = ?, plan_goal = ?, plan_activity = ?, calories_target = ?, calories_consume = ? WHERE plan_id = ?';
+        const query = 'UPDATE table_plan SET plan_name = ?, plan_goal = ?, plan_activity = ?, calories_target = ? WHERE user_id = ?';
 
         await new Promise((resolve, reject) => {
-            connection.query(query, [name, goal, activity, calories_target, calories_consume, plan_id], (err, rows, field) => {
+            connection.query(query, [name, goal, activity, calories_target, userId], (err, rows, field) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -512,7 +511,6 @@ const updatePlan = async (request, h) => {
 
 const deletePlan = async (request, h) => {
     try {
-        const { plan_id } = request.params;
 
         const token = request.headers.authorization.replace('Bearer ', '');
         let decodedToken;
@@ -530,10 +528,10 @@ const deletePlan = async (request, h) => {
 
         const userId = decodedToken.userId;
 
-        const query = 'DELETE FROM table_plan WHERE plan_id = ? AND user_id = ?';
+        const query = 'DELETE FROM table_plan WHERE user_id = ?';
 
         await new Promise((resolve, reject) => {
-            connection.query(query, [plan_id, userId], (err, rows, field) => {
+            connection.query(query, [userId], (err, rows, field) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -562,8 +560,6 @@ const deletePlan = async (request, h) => {
     }
 };
 
-
-// not tested yet
 const getHistory = async (request, h) => {
 
     try {
@@ -613,9 +609,6 @@ const getHistory = async (request, h) => {
     }
 };
 
-// for ML endpoints (also could be used to update the calories (unsure))
-// not finished yet
-// worked
 const classifyingImage = async (request, h) => {
     try {
 
@@ -636,10 +629,10 @@ const classifyingImage = async (request, h) => {
         const userId = decodedToken.userId;
         const file = request.payload.file;
         
-        const getPlanIdQuery = 'SELECT plan_id FROM table_plan WHERE user_id = ?';
+        const getPlanIdQuery = 'SELECT plan_id, calories_consume, calories_target FROM table_plan WHERE user_id = ?';
         
         //check plan
-        const planIdResult = await new Promise((resolve, reject) => {
+        const planResult = await new Promise((resolve, reject) => {
             connection.query(getPlanIdQuery, [userId], (err, rows, field) => {
                 if (err) {
                     reject(err);
@@ -649,7 +642,7 @@ const classifyingImage = async (request, h) => {
             });
         });
 
-        if (!planIdResult || !planIdResult.plan_id) {
+        if (!planResult || !planResult.plan_id) {
             const response = h.response({
                 status: 'fail',
                 message: 'Plan not found. Please create a plan.',
@@ -658,7 +651,7 @@ const classifyingImage = async (request, h) => {
             return response;
         }
 
-        const planId = planIdResult.plan_id;
+        const planId = planResult.plan_id;
         
         // Save the file to a temp location
         const filePath = Path.join(__dirname, 'uploadTemp', file.hapi.filename);
@@ -692,7 +685,7 @@ const classifyingImage = async (request, h) => {
             foodName = predictedClass;
         }
 
-        const getFoodQuery = 'SELECT food_id, food_name, food_calories, image_url FROM table_food WHERE food_name = ?';
+        const getFoodQuery = 'SELECT food_id, food_name, food_protein, food_calcium, food_fat, food_carbo, food_vitamins, food_calories, image_url FROM table_food WHERE food_name = ?';
 
         const food = await new Promise((resolve, reject) => {
             connection.query(getFoodQuery, [foodName], (err, rows, field) => {
@@ -712,6 +705,18 @@ const classifyingImage = async (request, h) => {
                     reject(err);
                 } else {
                     resolve();
+                }
+            });
+        });
+
+        const getConsumeCalQuery = 'SELECT calories_consume FROM table_plan WHERE plan_id = ?';
+
+        const newConsumeCal = await new Promise((resolve, reject) => {
+            connection.query(getConsumeCalQuery, [planId], (err, rows, field) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(rows[0].calories_consume);
                 }
             });
         });
@@ -740,9 +745,15 @@ const classifyingImage = async (request, h) => {
             status: 'success',
             message: 'image predicted',
             foodName: food.food_name,
+            foodPro: food.food_protein,
+            foodCalc: food.food_calcium,
+            foodFat: food.food_fat,
+            foodCarbo: food.food_carbo,
+            foodVit: food.food_vitamins,
             foodCal: food.food_calories,
-            foodImg: food.image_url,
             predictedProb: predictedProb,
+            calorieTarget: planResult.calories_target,
+            calorieConsume: newConsumeCal,
         });
         response.code(200);
         return response;
